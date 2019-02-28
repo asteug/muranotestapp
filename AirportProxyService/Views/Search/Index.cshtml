@@ -7,6 +7,15 @@
 <select class="js-data-ajax form-control" id="selectAirportFrom" required=""></select>
 <select class="js-data-ajax form-control" id="selectAirportTo" required=""></select>
 <button type="submit" class="btn btn-outline-success" onclick="submitButtonClicked()" id="sendSearchForm">Search</button>
+
+<br/>
+
+<div class="row">
+    <div class = "col-sm-12" id="results">
+        
+    </div>
+</div>
+
 @section scripts
 {
     <script>
@@ -26,46 +35,69 @@
                 url: '@Url.Action("SearchDestinations")',
                 type: 'POST',
                 data: JSON.stringify({
-                        FromAirport: selectAirportFrom[0].alias,
-                        ToAirport: selectAirportTo[0].alias,
-                        FromCity: selectAirportFrom[0].city,
-                        ToCity: selectAirportTo[0].city
-                    }),
+                    FromAirport: selectAirportFrom[0].alias,
+                    ToAirport: selectAirportTo[0].alias,
+                    FromCity: selectAirportFrom[0].city,
+                    ToCity: selectAirportTo[0].city
+                }),
                 beforeSend: function() {
-                    toastr.info("Loading started", "Info", {
-                        showMethod: "slideDown",
-                        hideMethod: "slideUp",
-                        closeButton: true,
-                        timeOut: 5e2
-                    });
+                    toastr.info("Loading started",
+                        "Info",
+                        {
+                            showMethod: "slideDown",
+                            hideMethod: "slideUp",
+                            closeButton: true,
+                            timeOut: 5e2
+                        });
                 },
                 contentType: 'application/json; charset=utf-8',
-                dataType:'json',
+                dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+
+                    if (!response.IsSuccessful) {
+                        toastr.error(response.Message,
+                            'Error',
+                            {
+                                showMethod: "slideDown",
+                                hideMethod: "slideUp",
+                                closeButton: true,
+                                timeOut: 25e2
+                            });
+                    } else {
+                        toastr.success('Data uploaded',
+                            'Success',
+                            {
+                                showMethod: "slideDown",
+                                hideMethod: "slideUp",
+                                closeButton: true,
+                                timeOut: 25e2
+                            });
+                        if (!response.Result || response.Result.lenght === 0) {
+                            $("#results").append("<strong>No data</strong>");
+                        } else {
+                            $.each(response.Result,
+                                function(k, v) {
+                                    $("#results").append("<strong>" + v.Source + "->" + v.Destination + "| Airline " + v.Airline+"</strong><br/>");
+                                });
+                        }
+                    }
                 },
                 error: function(jqXHR, exception) {
                     toastr.error(exception,
-                       'Error',
-                       {
-                           showMethod: "slideDown",
-                           hideMethod: "slideUp",
-                           closeButton: true,
-                           timeOut: 25e2
-                       });
-                }
-            }).done(function(res) {
-                    toastr.success('Data uploaded',
-                        'Success',
+                        'Error',
                         {
                             showMethod: "slideDown",
                             hideMethod: "slideUp",
                             closeButton: true,
                             timeOut: 25e2
                         });
+                }
+            }).done(function(res) {
+
             });
 
         }
+
         $(".js-data-ajax").select2({
             minimumInputLength: 3,
             maximumInputLength: 20,

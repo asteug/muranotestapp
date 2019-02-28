@@ -141,7 +141,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Algorithm\DepthSearch.cs" />
     <Compile Include="ApiIntegration\AirlineApiIntegrationMethods.cs" />
     <Compile Include="ApiIntegration\ICommonParameters.cs" />
     <Compile Include="ApiIntegration\AirportApiIntegrationMethods.cs" />
