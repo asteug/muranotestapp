@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using AirportProxyService.Algorithm;
 using AirportProxyService.ApiIntegration;
 using AirportProxyService.Helpers;
 using AirportProxyService.Models;
@@ -55,7 +54,6 @@ namespace AirportProxyService.Controllers
             CancellationToken token = _cancelTokenSource.Token;
             try
             {
-                DepthFirstSearch searchDic = new DepthFirstSearch();
                 int iteration = 0;
 
                 List<RouteEntry> routes = new List<RouteEntry>();
