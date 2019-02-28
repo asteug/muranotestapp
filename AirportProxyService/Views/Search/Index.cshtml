@@ -1,0 +1,133 @@
+﻿@{
+    ViewBag.Title = "Search route";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@ViewBag.Title</h2>
+<select class="js-data-ajax form-control" id="selectAirportFrom" required=""></select>
+<select class="js-data-ajax form-control" id="selectAirportTo" required=""></select>
+<button type="submit" class="btn btn-outline-success" onclick="submitButtonClicked()" id="sendSearchForm">Search</button>
+@section scripts
+{
+    <script>
+        function submitButtonClicked() {
+            let selectAirportFrom = $("#selectAirportFrom").select2("data");
+            let selectAirportTo = $("#selectAirportTo").select2("data");
+
+            if (typeof selectAirportFrom == "undefined" || typeof selectAirportTo == "undefined")
+                return false;
+            let fromAirport = selectAirportFrom[0].alias;
+            let toAirport = selectAirportTo[0].alias;
+
+            $("#aliasFromAirport").val(fromAirport);
+            $("#aliasToAirport").val(toAirport);
+
+            $.ajax({
+                url: '@Url.Action("SearchDestinations")',
+                type: 'POST',
+                data: JSON.stringify({
+                        FromAirport: selectAirportFrom[0].alias,
+                        ToAirport: selectAirportTo[0].alias,
+                        FromCity: selectAirportFrom[0].city,
+                        ToCity: selectAirportTo[0].city
+                    }),
+                beforeSend: function() {
+                    toastr.info("Loading started", "Info", {
+                        showMethod: "slideDown",
+                        hideMethod: "slideUp",
+                        closeButton: true,
+                        timeOut: 5e2
+                    });
+                },
+                contentType: 'application/json; charset=utf-8',
+                dataType:'json',
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(jqXHR, exception) {
+                    toastr.error(exception,
+                       'Error',
+                       {
+                           showMethod: "slideDown",
+                           hideMethod: "slideUp",
+                           closeButton: true,
+                           timeOut: 25e2
+                       });
+                }
+            }).done(function(res) {
+                    toastr.success('Data uploaded',
+                        'Success',
+                        {
+                            showMethod: "slideDown",
+                            hideMethod: "slideUp",
+                            closeButton: true,
+                            timeOut: 25e2
+                        });
+            });
+
+        }
+        $(".js-data-ajax").select2({
+            minimumInputLength: 3,
+            maximumInputLength: 20,
+            ajax: {
+                url: '@Url.Action("SearchAirport")',
+                dataType: 'json',
+                type: "POST",
+                delay: 250,
+                data: function(params) {
+                    let model = { "query": params.term };
+                    return model;
+                },
+                processResults: function(data, params) {
+                    params.page = params.page || 1;
+                    return {
+                        results: $.map(data.Result,
+                            function(item, i) {
+                                return {
+                                    id: i,
+                                    name: item.Name,
+                                    country: item.Country,
+                                    city: item.City,
+                                    alias: item.Alias
+                                }
+                            }),
+                        pagination: {
+                            more: (params.page * 30) < data.total_count
+                        }
+                    };
+                },
+                cache: true
+            },
+            escapeMarkup: function(markup) { return markup; },
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        function formatRepo(ajaxData) {
+            if (ajaxData.loading) {
+                return ajaxData.text;
+            }
+
+            // Because, next step working using airport alias 
+            if (ajaxData.alias !== '\\N') {
+                var markup = "<div class='select2-result-repository clearfix'>" +
+                    "<div class='select2-result-repository__title'>" +
+                    ajaxData.name +
+                    " (" +
+                    ajaxData.alias +
+                    ")";
+
+                if (ajaxData.country) {
+                    markup += " " + ajaxData.country;
+                }
+
+                markup += "</div></div>";
+                return markup;
+            }
+        }
+
+        function formatRepoSelection(repo) {
+            return repo.name + " (" + repo.alias + ")";
+        }
+    </script>
+}
